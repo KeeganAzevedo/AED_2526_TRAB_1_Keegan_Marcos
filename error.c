@@ -26,3 +26,4 @@ void error(int status, int errnum, const char *message, ...) {
     exit(status);
 }
 
+//batata
