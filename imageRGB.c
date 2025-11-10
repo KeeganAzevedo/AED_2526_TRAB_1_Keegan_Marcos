@@ -278,7 +278,7 @@ void ImageDestroy(Image* imgp) {
 
 /// Create a deep copy of the image pointed to by img.
 ///   img : address of an Image variable.
-///
+///a
 /// On success, a new copied image is returned.
 /// (The caller is responsible for destroying the returned image!)
 Image ImageCopy(const Image img) {
