@@ -11,12 +11,12 @@
 /// 2025
 
 // Student authors (fill in below):
-// NMec:
-// Name:
+// NMec: 110160
+// Name: Keegan Azevedo
 // NMec:
 // Name:
 //
-// Date:
+// Date: 11/11/2025
 //
 
 #include "imageRGB.h"
@@ -278,17 +278,38 @@ void ImageDestroy(Image* imgp) {
 
 /// Create a deep copy of the image pointed to by img.
 ///   img : address of an Image variable.
-///a
 
 /// On success, a new copied image is returned.
 /// (The caller is responsible for destroying the returned image!)
 Image ImageCopy(const Image img) {
   assert(img != NULL);
+  if (!img) return NULL;
 
-  // TO BE COMPLETED
-  // ...
+  const int W = ImageGetWidth(img);
+  const int H = ImageGetHeight(img);
+  const int LUTn = ImageGetLUTSize(img);
 
-  return NULL;
+  Image dst = ImageCreate(W, H, LUTn);
+  if (!dst) return NULL;
+
+  // Copiar LUT
+  for (int i = 0; i < LUTn; ++i) {
+      RGB c = ImageGetLUTColor(img, i);
+      if (!ImageSetLUTColor(dst, i, c)) { /* se a API devolver bool/int */
+          ImageDestroy(dst);
+          return NULL;
+      }
+  }
+
+  // Copiar matriz de índices 
+  for (int v = 0; v < H; ++v) {
+      for (int u = 0; u < W; ++u) {
+          int idx = ImageGetPixelIndex(img, u, v);
+          ImageSetPixelIndex(dst, u, v, idx);
+      }
+  }
+
+  return dst;
 }
 
 /// Printing on the console
@@ -585,12 +606,32 @@ int ImageIsDifferent(const Image img1, const Image img2) {
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 Image ImageRotate90CW(const Image img) {
-  assert(img != NULL);
+    assert(img != NULL);
+    if (!img) return NULL;
 
-  // TO BE COMPLETED
-  // ...
+    const int W = ImageGetWidth(img);
+    const int H = ImageGetHeight(img);
+    const int LUTn = ImageGetLUTSize(img);
 
-  return NULL;
+    Image dst = ImageCreate(H, W, LUTn);
+    if (!dst) return NULL;
+
+    //Copiar LUT
+    for (int i = 0; i < LUTn; ++i) {
+        RGB c = ImageGetLUTColor(img, i);
+        ImageSetLUTColor(dst, i, c);
+    }
+
+    //Mapeamento: dst[v][u] = img[H-1-u][v]
+    for (int v = 0; v < H; ++v) {
+        for (int u = 0; u < W; ++u) {
+            int idx = ImageGetPixelIndex(img, u, v);
+            int du = v;
+            int dv = H - 1 - u;
+            ImageSetPixelIndex(dst, du, dv, idx);
+        }
+    }
+    return dst;
 }
 
 /// Rotate 180 degrees clockwise (CW).
