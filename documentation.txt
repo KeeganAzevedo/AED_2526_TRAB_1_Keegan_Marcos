@@ -1,0 +1,18 @@
+imageRGB line 590 rotates 90cw and 180cw
+imageRGB line 107 image memory allocation
+imageRGB line 204 creates image (107) and malloc LUTAllocColor(157)
+    and image constraction
+imageTGBtest the main is her
+
+what do we need to complete:
+
+ImageRegionFillingWithSTACK
+ImageRegionFillingWithQUEUE
+ImageSegmentation
+ImageRegionFillingRecursive
+ImageRotate180CW
+ImageRotate90CW
+ImageIsEqual
+
+future problems 
+file istrumentaion.c has a problem line 40
