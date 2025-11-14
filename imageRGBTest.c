@@ -19,7 +19,7 @@
 #include "imageRGB.h"
 #include "instrumentation.h"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {//<------------------------------------------------------starts here
   program_name = argv[0];
   if (argc != 1) {
     error(1, 0, "Usage: imageRGBTest");

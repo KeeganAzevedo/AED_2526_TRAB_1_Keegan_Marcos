@@ -11,12 +11,12 @@
 /// 2025
 
 // Student authors (fill in below):
-// NMec: 110160
-// Name: Keegan Azevedo
+// NMec: 114982
+// Name: Marcos Matos Koufaliotis
 // NMec:
 // Name:
 //
-// Date: 11/11/2025
+// Date:
 //
 
 #include "imageRGB.h"
@@ -278,38 +278,16 @@ void ImageDestroy(Image* imgp) {
 
 /// Create a deep copy of the image pointed to by img.
 ///   img : address of an Image variable.
-
+///
 /// On success, a new copied image is returned.
 /// (The caller is responsible for destroying the returned image!)
 Image ImageCopy(const Image img) {
   assert(img != NULL);
-  if (!img) return NULL;
 
-  const int W = ImageGetWidth(img);
-  const int H = ImageGetHeight(img);
-  const int LUTn = ImageGetLUTSize(img);
+  // TO BE COMPLETED
+  // ...
 
-  Image dst = ImageCreate(W, H, LUTn);
-  if (!dst) return NULL;
-
-  // Copiar LUT
-  for (int i = 0; i < LUTn; ++i) {
-      RGB c = ImageGetLUTColor(img, i);
-      if (!ImageSetLUTColor(dst, i, c)) { /* se a API devolver bool/int */
-          ImageDestroy(dst);
-          return NULL;
-      }
-  }
-
-  // Copiar matriz de índices 
-  for (int v = 0; v < H; ++v) {
-      for (int u = 0; u < W; ++u) {
-          int idx = ImageGetPixelIndex(img, u, v);
-          ImageSetPixelIndex(dst, u, v, idx);
-      }
-  }
-
-  return dst;
+  return NULL;
 }
 
 /// Printing on the console
@@ -577,11 +555,15 @@ uint16 ImageColors(const Image img) {
 int ImageIsEqual(const Image img1, const Image img2) {
   assert(img1 != NULL);
   assert(img2 != NULL);
-
+  
+  if(ImageWidth(img1)== ImageWidth(img2) && ImageHeight(img1) == ImageHeight(img2)){
+    
+    return 0 ;
+  }
   // TO BE COMPLETED
   // ...
 
-  return 0;
+  return 1;
 }
 
 int ImageIsDifferent(const Image img1, const Image img2) {
@@ -606,32 +588,13 @@ int ImageIsDifferent(const Image img1, const Image img2) {
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 Image ImageRotate90CW(const Image img) {
-    assert(img != NULL);
-    if (!img) return NULL;
+  assert(img != NULL);
+  //go to 204
 
-    const int W = ImageGetWidth(img);
-    const int H = ImageGetHeight(img);
-    const int LUTn = ImageGetLUTSize(img);
+  // TO BE COMPLETED
+  // ...
 
-    Image dst = ImageCreate(H, W, LUTn);
-    if (!dst) return NULL;
-
-    //Copiar LUT
-    for (int i = 0; i < LUTn; ++i) {
-        RGB c = ImageGetLUTColor(img, i);
-        ImageSetLUTColor(dst, i, c);
-    }
-
-    //Mapeamento: dst[v][u] = img[H-1-u][v]
-    for (int v = 0; v < H; ++v) {
-        for (int u = 0; u < W; ++u) {
-            int idx = ImageGetPixelIndex(img, u, v);
-            int du = v;
-            int dv = H - 1 - u;
-            ImageSetPixelIndex(dst, du, dv, idx);
-        }
-    }
-    return dst;
+  return NULL;
 }
 
 /// Rotate 180 degrees clockwise (CW).
@@ -643,6 +606,11 @@ Image ImageRotate90CW(const Image img) {
 Image ImageRotate180CW(const Image img) {
   assert(img != NULL);
 
+  for(int i = 0; i < 2; i++){
+    
+    ImageRotate90CW(img);
+
+  }
   // TO BE COMPLETED
   // ...
 
