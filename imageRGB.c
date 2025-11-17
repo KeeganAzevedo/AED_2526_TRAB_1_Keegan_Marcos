@@ -13,8 +13,8 @@
 // Student authors (fill in below):
 // NMec: 114982
 // Name: Marcos Matos Koufaliotis
-// NMec:
-// Name:
+// NMec: 110160
+// Name: Keegan Azevedo
 //
 // Date:
 //
@@ -283,10 +283,35 @@ void ImageDestroy(Image* imgp) {
 /// (The caller is responsible for destroying the returned image!)
 Image ImageCopy(const Image img) {
   assert(img != NULL);
+  if (!img) return NULL;
 
+  const int W = ImageGetWidth(img);
+  const int H = ImageGetHeight(img);
+  const int LUTn = ImageGetLUTSize(img);
+
+  Image dst = ImageCreate(W, H, LUTn);
+  if (!dst) return NULL;
+
+  // Copiar LUT
+  for (int i = 0; i < LUTn; ++i) {
+      RGB c = ImageGetLUTColor(img, i);
+      if (!ImageSetLUTColor(dst, i, c)) { /* se a API devolver bool/int */
+          ImageDestroy(dst);
+          return NULL;
+      }
+  }
+
+  // Copiar matriz de índices 
+  for (int v = 0; v < H; ++v) {
+      for (int u = 0; u < W; ++u) {
+          int idx = ImageGetPixelIndex(img, u, v);
+          ImageSetPixelIndex(dst, u, v, idx);
+      }
+  }
   // TO BE COMPLETED
   // ...
 
+  return dst;
   return NULL;
 }
 
@@ -588,14 +613,31 @@ int ImageIsDifferent(const Image img1, const Image img2) {
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 Image ImageRotate90CW(const Image img) {
-  assert(img != NULL);
-  //go to 204
+    assert(img != NULL);
+    if (!img) return NULL;
 
-  // TO BE COMPLETED
-  // ...
+    const int W = ImageGetWidth(img);
+    const int H = ImageGetHeight(img);
+    const int LUTn = ImageGetLUTSize(img);
 
-  return NULL;
-}
+    Image dst = ImageCreate(H, W, LUTn);
+    if (!dst) return NULL;
+        //Copiar LUT
+    for (int i = 0; i < LUTn; ++i) {
+        RGB c = ImageGetLUTColor(img, i);
+        ImageSetLUTColor(dst, i, c);
+    }
+        //Mapeamento: dst[v][u] = img[H-1-u][v]
+    for (int v = 0; v < H; ++v) {
+        for (int u = 0; u < W; ++u) {
+            int idx = ImageGetPixelIndex(img, u, v);
+            int du = v;
+            int dv = H - 1 - u;
+            ImageSetPixelIndex(dst, du, dv, idx);
+        }
+    }
+    return dst;
+  }
 
 /// Rotate 180 degrees clockwise (CW).
 /// Returns a rotated version of the image.
