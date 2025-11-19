@@ -612,7 +612,7 @@ int ImageIsDifferent(const Image img1, const Image img2) {
 ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
-Image ImageRotate90CW(const Image img) {
+Image ImageRotate90CW(const Image img) {//test
     assert(img != NULL);
     if (!img) return NULL;
 
