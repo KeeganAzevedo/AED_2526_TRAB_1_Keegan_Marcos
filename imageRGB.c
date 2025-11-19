@@ -735,6 +735,21 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
   assert(img != NULL);
   assert(fillFunct != NULL);
 
+  int h = img ->height;
+  int w = img ->width;
+  
+  for(int y = 0; y < h; y++){
+    for (int x = 0; x < w; x++){
+     
+      if(? == 0){
+      GenerateNextColor();
+      }
+      GenerateNextColor();
+      fillFunct(img,y, x, label?);
+    }
+     
+  }
+  
   // TO BE COMPLETED
   // ...
 
