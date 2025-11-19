@@ -285,35 +285,27 @@ Image ImageCopy(const Image img) {
   assert(img != NULL);
   if (!img) return NULL;
 
-  const int W = ImageGetWidth(img);
-  const int H = ImageGetHeight(img);
-  const int LUTn = ImageGetLUTSize(img);
+  // criar header e estruturas
+  Image dst = AllocateImageHeader(img->width, img->height);
 
-  Image dst = ImageCreate(W, H, LUTn);
-  if (!dst) return NULL;
-
-  // Copiar LUT
-  for (int i = 0; i < LUTn; ++i) {
-      RGB c = ImageGetLUTColor(img, i);
-      if (!ImageSetLUTColor(dst, i, c)) { /* se a API devolver bool/int */
-          ImageDestroy(dst);
-          return NULL;
-      }
+  // copiar LUT completa
+  dst->num_colors = img->num_colors;
+  for (uint16 i = 0; i < dst->num_colors; ++i) {
+    dst->LUT[i] = img->LUT[i];
   }
 
-  // Copiar matriz de índices 
-  for (int v = 0; v < H; ++v) {
-      for (int u = 0; u < W; ++u) {
-          int idx = ImageGetPixelIndex(img, u, v);
-          ImageSetPixelIndex(dst, u, v, idx);
-      }
+  // alocar e copiar linhas de índices
+  for (uint32 i = 0; i < img->height; ++i) {
+    dst->image[i] = AllocateRowArray(img->width);
+    for (uint32 j = 0; j < img->width; ++j) {
+      dst->image[i][j] = img->image[i][j];
+      PIXMEM += 2; // 1 leitura + 1 escrita em array de píxeis
+    }
   }
-  // TO BE COMPLETED
-  // ...
 
   return dst;
-  return NULL;
 }
+
 
 /// Printing on the console
 
@@ -580,16 +572,22 @@ uint16 ImageColors(const Image img) {
 int ImageIsEqual(const Image img1, const Image img2) {
   assert(img1 != NULL);
   assert(img2 != NULL);
-  
-  if(ImageWidth(img1)== ImageWidth(img2) && ImageHeight(img1) == ImageHeight(img2)){
-    
-    return 0 ;
-  }
-  // TO BE COMPLETED
-  // ...
 
+  if (ImageWidth(img1) != ImageWidth(img2) || ImageHeight(img1) != ImageHeight(img2))
+    return 0;
+
+  for (uint32 i = 0; i < img1->height; ++i) {
+    for (uint32 j = 0; j < img1->width; ++j) {
+      uint16 l1 = img1->image[i][j];  PIXMEM += 1; // leitura
+      uint16 l2 = img2->image[i][j];  PIXMEM += 1; // leitura
+      if (img1->LUT[l1] != img2->LUT[l2]) {
+        return 0;
+      }
+    }
+  }
   return 1;
 }
+
 
 int ImageIsDifferent(const Image img1, const Image img2) {
   assert(img1 != NULL);
@@ -613,31 +611,29 @@ int ImageIsDifferent(const Image img1, const Image img2) {
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 Image ImageRotate90CW(const Image img) {
-    assert(img != NULL);
-    if (!img) return NULL;
+  assert(img != NULL);
+  // dims alvo
+  uint32 W = img->width, H = img->height;
+  Image dst = AllocateImageHeader(H, W);
 
-    const int W = ImageGetWidth(img);
-    const int H = ImageGetHeight(img);
-    const int LUTn = ImageGetLUTSize(img);
+  // copiar LUT
+  dst->num_colors = img->num_colors;
+  for (uint16 i = 0; i < dst->num_colors; ++i) dst->LUT[i] = img->LUT[i];
 
-    Image dst = ImageCreate(H, W, LUTn);
-    if (!dst) return NULL;
-        //Copiar LUT
-    for (int i = 0; i < LUTn; ++i) {
-        RGB c = ImageGetLUTColor(img, i);
-        ImageSetLUTColor(dst, i, c);
+  // alocar linhas
+  for (uint32 v = 0; v < dst->height; ++v) dst->image[v] = AllocateRowArray(dst->width);
+
+  // dst[v'][u'] = src[v][u] com rotação 90º CW: (u',v') = (v, H-1-u)
+  for (uint32 v = 0; v < H; ++v) {
+    for (uint32 u = 0; u < W; ++u) {
+      uint16 idx = img->image[v][u]; PIXMEM += 1;
+      uint32 u2 = v, v2 = H - 1 - u;
+      dst->image[v2][u2] = idx; PIXMEM += 1;
     }
-        //Mapeamento: dst[v][u] = img[H-1-u][v]
-    for (int v = 0; v < H; ++v) {
-        for (int u = 0; u < W; ++u) {
-            int idx = ImageGetPixelIndex(img, u, v);
-            int du = v;
-            int dv = H - 1 - u;
-            ImageSetPixelIndex(dst, du, dv, idx);
-        }
-    }
-    return dst;
   }
+  return dst;
+}
+
 
 /// Rotate 180 degrees clockwise (CW).
 /// Returns a rotated version of the image.
@@ -647,17 +643,26 @@ Image ImageRotate90CW(const Image img) {
 /// (The caller is responsible for destroying the returned image!)
 Image ImageRotate180CW(const Image img) {
   assert(img != NULL);
+  uint32 W = img->width, H = img->height;
+  Image dst = AllocateImageHeader(W, H);
 
-  for(int i = 0; i < 2; i++){
-    
-    ImageRotate90CW(img);
+  // copiar LUT
+  dst->num_colors = img->num_colors;
+  for (uint16 i = 0; i < dst->num_colors; ++i) dst->LUT[i] = img->LUT[i];
 
+  // alocar linhas
+  for (uint32 v = 0; v < H; ++v) dst->image[v] = AllocateRowArray(W);
+
+  // mapeamento 180º: (u',v') = (W-1-u, H-1-v)
+  for (uint32 v = 0; v < H; ++v) {
+    for (uint32 u = 0; u < W; ++u) {
+      uint16 idx = img->image[v][u]; PIXMEM += 1;
+      dst->image[H - 1 - v][W - 1 - u] = idx; PIXMEM += 1;
+    }
   }
-  // TO BE COMPLETED
-  // ...
-
-  return NULL;
+  return dst;
 }
+
 
 /// Check whether pixel coords (u, v) are inside img.
 /// ATTENTION
