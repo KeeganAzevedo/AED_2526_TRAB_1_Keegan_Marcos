@@ -281,13 +281,15 @@ void ImageDestroy(Image* imgp) {
 ///
 /// On success, a new copied image is returned.
 /// (The caller is responsible for destroying the returned image!)
+// feito por keegan ainda por ver o erro
 Image ImageCopy(const Image img) {
   assert(img != NULL);
   if (!img) return NULL;
 
-  const int W = ImageGetWidth(img);
-  const int H = ImageGetHeight(img);
-  const int LUTn = ImageGetLUTSize(img);
+  const int W = ImageWidth(img);
+  const int H = ImageHeight(img);
+  const int LUTn = ImageLUTSize(img); 
+
 
   Image dst = ImageCreate(W, H, LUTn);
   if (!dst) return NULL;
@@ -308,8 +310,7 @@ Image ImageCopy(const Image img) {
           ImageSetPixelIndex(dst, u, v, idx);
       }
   }
-  // TO BE COMPLETED
-  // ...
+
 
   return dst;
   return NULL;
@@ -559,7 +560,7 @@ uint32 ImageWidth(const Image img) {
 }
 
 /// Get image height
-uint32 ImageHeight(const Image img) {
+uint32 ImageHeight(const Image img) {//<---------------------------------------------------------------------
   assert(img != NULL);
   return img->height;
 }
@@ -580,13 +581,18 @@ uint16 ImageColors(const Image img) {
 int ImageIsEqual(const Image img1, const Image img2) {
   assert(img1 != NULL);
   assert(img2 != NULL);
+
+  int Wa = ImageWidth(img1), Ha = ImageHeight(img1);
+  int Wb = ImageWidth(img2), Hb = ImageHeight(img2);
   
   if(ImageWidth(img1)== ImageWidth(img2) && ImageHeight(img1) == ImageHeight(img2)){
-    
     return 0 ;
   }
-  // TO BE COMPLETED
-  // ...
+  
+  for (int x = 0; x<ImageGetHeight(img1), ++x) {
+    
+  }
+  
 
   return 1;
 }
@@ -735,17 +741,21 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
   assert(img != NULL);
   assert(fillFunct != NULL);
 
-  int h = img ->height;
-  int w = img ->width;
+  int h = ImageHeight(img);
+  int w = ImageWidth(img);
+  rgb_t newColor;
   
   for(int y = 0; y < h; y++){
     for (int x = 0; x < w; x++){
-     
-      if(? == 0){
-      GenerateNextColor();
+      int myPixel = mageGetPixelIndex(img, x, y);    
+      
+      if(myPixel == 0){
+        newColor = GenerateNextColor(newColor);
+
+        fillFunct(img, x, y, newColor, regions);
       }
-      GenerateNextColor();
-      fillFunct(img,y, x, label?);
+      
+    
     }
      
   }

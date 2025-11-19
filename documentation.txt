@@ -12,7 +12,7 @@ ImageSegmentation
 ImageRegionFillingRecursive 
 ImageRotate180CW            done
 ImageRotate90CW            done
-ImageIsEqual                done
+ImageIsEqual                done add pixel compareson
 
 future problems 
 file istrumentaion.c has a problem line 40
