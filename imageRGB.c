@@ -281,6 +281,7 @@ void ImageDestroy(Image* imgp) {
 ///
 /// On success, a new copied image is returned.
 /// (The caller is responsible for destroying the returned image!)
+// feito por keegan ainda por ver o erro
 Image ImageCopy(const Image img) {
   assert(img != NULL);
   if (!img) return NULL;
@@ -551,7 +552,7 @@ uint32 ImageWidth(const Image img) {
 }
 
 /// Get image height
-uint32 ImageHeight(const Image img) {
+uint32 ImageHeight(const Image img) {//<---------------------------------------------------------------------
   assert(img != NULL);
   return img->height;
 }
@@ -740,6 +741,25 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
   assert(img != NULL);
   assert(fillFunct != NULL);
 
+  int h = ImageHeight(img);
+  int w = ImageWidth(img);
+  rgb_t newColor;
+  
+  for(int y = 0; y < h; y++){
+    for (int x = 0; x < w; x++){
+      int myPixel = mageGetPixelIndex(img, x, y);    
+      
+      if(myPixel == 0){
+        newColor = GenerateNextColor(newColor);
+
+        fillFunct(img, x, y, newColor, regions);
+      }
+      
+    
+    }
+     
+  }
+  
   // TO BE COMPLETED
   // ...
 

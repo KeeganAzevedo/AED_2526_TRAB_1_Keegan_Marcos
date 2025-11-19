@@ -9,10 +9,10 @@ what do we need to complete:
 ImageRegionFillingWithSTACK
 ImageRegionFillingWithQUEUE
 ImageSegmentation
-ImageRegionFillingRecursive
-ImageRotate180CW
-ImageRotate90CW
-ImageIsEqual
+ImageRegionFillingRecursive 
+ImageRotate180CW            done
+ImageRotate90CW            done
+ImageIsEqual                done add pixel compareson
 
 future problems 
 file istrumentaion.c has a problem line 40
