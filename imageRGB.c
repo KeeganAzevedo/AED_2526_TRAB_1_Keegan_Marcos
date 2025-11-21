@@ -695,6 +695,7 @@ int ImageRegionFillingRecursive(Image img, int u, int v, uint16 label) {
   assert(ImageIsValidPixel(img, u, v));
   assert(label < FIXED_LUT_SIZE);
 
+    
   // TO BE COMPLETED
   // ...
 
@@ -707,7 +708,18 @@ int ImageRegionFillingWithSTACK(Image img, int u, int v, uint16 label) {
   assert(img != NULL);
   assert(ImageIsValidPixel(img, u, v));
   assert(label < FIXED_LUT_SIZE);
+  
+  Stack* mystack = StackCreate(ImageHeight(img)*ImageWidth(img));
+  int oldColor;
+  int newColor;
+  
+ 
+  
+  
+  //PixelCoordsCreate;
 
+      //ImageRegionFillingRecursive();//use this for directions
+  
   // TO BE COMPLETED
   // ...
 
@@ -743,6 +755,7 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
 
   int h = ImageHeight(img);
   int w = ImageWidth(img);
+  unsigned int regions = 0;
   rgb_t newColor;
   
   for(int y = 0; y < h; y++){
@@ -752,7 +765,7 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
       if(myPixel == 0){
         newColor = GenerateNextColor(newColor);
 
-        fillFunct(img, x, y, newColor, regions);
+        fillFunct(img, x, y, newColor, regions); //<-----------------------------------------------------------what to do in fillFunct
       }
       
     
@@ -762,6 +775,6 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
   
   // TO BE COMPLETED
   // ...
-
-  return 0;
+  
+  return regions;
 }
