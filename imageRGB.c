@@ -765,7 +765,7 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
       if(myPixel == 0){
         newColor = GenerateNextColor(newColor);
 
-        fillFunct(img, x, y, newColor, regions); //<-----------------------------------------------------------what to do in fillFunct
+        //fillFunct(img, x, y, newColor, regions); //<-----------------------------------------------------------what to do in fillFunct
       }
       
     
