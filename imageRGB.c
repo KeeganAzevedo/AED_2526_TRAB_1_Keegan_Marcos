@@ -695,7 +695,21 @@ int ImageRegionFillingRecursive(Image img, int u, int v, uint16 label) {
   assert(ImageIsValidPixel(img, u, v));
   assert(label < FIXED_LUT_SIZE);
 
-    
+  uint16 myPixel = img ->image[u][v];
+  if(myPixel != label){
+     return 0;
+  }
+
+  //update
+  myPixel = label;
+  //check right
+  ImageRegionFillingRecursive(img, u + 1, v,label);//img,x +1,y,newColor
+  //check down
+  ImageRegionFillingRecursive(img, u, v + 1,label);//img,x,y +1,newColor
+  //check left
+  ImageRegionFillingRecursive(img, u - 1, v,label);//img,x,y -1,newColor
+  //check up
+  ImageRegionFillingRecursive(img, u, v -1,label);//img,x ,y -1,newColor
   // TO BE COMPLETED
   // ...
 
@@ -749,23 +763,26 @@ int ImageRegionFillingWithQUEUE(Image img, int u, int v, uint16 label) {
 /// last argument, using a function pointer.
 ///
 /// Returns the number of image regions found.
+
 int ImageSegmentation(Image img, FillingFunction fillFunct) {
   assert(img != NULL);
   assert(fillFunct != NULL);
 
   int h = ImageHeight(img);
   int w = ImageWidth(img);
-  unsigned int regions = 0;
+  int regions = 0;
   rgb_t newColor;
-  
+  int myPixel = 0;
+
   for(int y = 0; y < h; y++){
     for (int x = 0; x < w; x++){
-      int myPixel = mageGetPixelIndex(img, x, y);    
+      myPixel = img->image[y][x];    
       
       if(myPixel == 0){
+        regions ++;
         newColor = GenerateNextColor(newColor);
 
-        //fillFunct(img, x, y, newColor, regions); //<-----------------------------------------------------------what to do in fillFunct
+        fillFunct(img, x, y, newColor); //good does it work? just test it. also its needed for 3 ather function
       }
       
     
@@ -774,7 +791,7 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
   }
   
   // TO BE COMPLETED
-  // ...
+  // ...//use this function to make the algorithm// we have to see
   
   return regions;
 }
