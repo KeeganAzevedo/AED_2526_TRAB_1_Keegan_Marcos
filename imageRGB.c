@@ -613,25 +613,36 @@ int ImageIsDifferent(const Image img1, const Image img2) {
 /// (The caller is responsible for destroying the returned image!)
 Image ImageRotate90CW(const Image img) {
   assert(img != NULL);
-  // dims alvo
-  uint32 W = img->width, H = img->height;
+
+  uint32 W = img->width;
+  uint32 H = img->height;
+
+  // largura nova = H, altura nova = W
   Image dst = AllocateImageHeader(H, W);
 
   // copiar LUT
   dst->num_colors = img->num_colors;
-  for (uint16 i = 0; i < dst->num_colors; ++i) dst->LUT[i] = img->LUT[i];
+  for (uint16 i = 0; i < dst->num_colors; ++i) {
+    dst->LUT[i] = img->LUT[i];
+  }
 
   // alocar linhas
-  for (uint32 v = 0; v < dst->height; ++v) dst->image[v] = AllocateRowArray(dst->width);
+  for (uint32 v = 0; v < dst->height; ++v) {
+    dst->image[v] = AllocateRowArray(dst->width);
+  }
 
-  // dst[v'][u'] = src[v][u] com rotação 90º CW: (u',v') = (v, H-1-u)
+  // (u, v) -> (u', v') = (H-1-v, u)
   for (uint32 v = 0; v < H; ++v) {
     for (uint32 u = 0; u < W; ++u) {
-      uint16 idx = img->image[v][u]; PIXMEM += 1;
-      uint32 u2 = v, v2 = H - 1 - u;
-      dst->image[v2][u2] = idx; PIXMEM += 1;
+      uint16 idx = img->image[v][u]; 
+      PIXMEM += 1;               // leitura
+      uint32 u2 = H - 1 - v;
+      uint32 v2 = u;
+      dst->image[v2][u2] = idx;
+      PIXMEM += 1;               // escrita
     }
   }
+
   return dst;
 }
 
@@ -722,23 +733,47 @@ int ImageRegionFillingWithSTACK(Image img, int u, int v, uint16 label) {
   assert(img != NULL);
   assert(ImageIsValidPixel(img, u, v));
   assert(label < FIXED_LUT_SIZE);
-  
-  Stack* mystack = StackCreate(ImageHeight(img)*ImageWidth(img));
-  int oldColor;
-  int newColor;
-  
- 
-  
-  
-  //PixelCoordsCreate;
 
-      //ImageRegionFillingRecursive();//use this for directions
-  
-  // TO BE COMPLETED
-  // ...
+  uint16 oldLabel = img->image[v][u];
+  PIXMEM += 1;
 
-  return 0;
+  if (oldLabel == label) {
+    return 0;
+  }
+
+  int count = 0;
+
+  Stack* stack = StackCreate(ImageWidth(img) * ImageHeight(img));
+  PixelCoords seed = PixelCoordsCreate(u, v);
+  StackPush(stack, seed);
+
+  while (!StackIsEmpty(stack)) {
+    PixelCoords p = StackPop(stack);
+    int x = p.u;
+    int y = p.v;
+
+    if (!ImageIsValidPixel(img, x, y)) continue;
+
+    uint16* row = img->image[y];
+    uint16* pix = &row[x];
+    PIXMEM += 1;    // leitura
+
+    if (*pix != oldLabel) continue;
+
+    *pix = label;
+    PIXMEM += 1;    // escrita
+    count++;
+
+    StackPush(stack, PixelCoordsCreate(x + 1, y));
+    StackPush(stack, PixelCoordsCreate(x - 1, y));
+    StackPush(stack, PixelCoordsCreate(x, y + 1));
+    StackPush(stack, PixelCoordsCreate(x, y - 1));
+  }
+
+  StackDestroy(&stack);
+  return count;
 }
+
 
 /// Region growing using a QUEUE of pixel coordinates to
 /// implement the flood-filling algorithm.
@@ -747,11 +782,46 @@ int ImageRegionFillingWithQUEUE(Image img, int u, int v, uint16 label) {
   assert(ImageIsValidPixel(img, u, v));
   assert(label < FIXED_LUT_SIZE);
 
-  // TO BE COMPLETED
-  // ...
+  uint16 oldLabel = img->image[v][u];
+  PIXMEM += 1;
 
-  return 0;
+  if (oldLabel == label) {
+    return 0;
+  }
+
+  int count = 0;
+
+  Queue* q = QueueCreate(ImageWidth(img) * ImageHeight(img));
+  PixelCoords seed = PixelCoordsCreate(u, v);
+  QueueEnqueue(q, seed);
+
+  while (!QueueIsEmpty(q)) {
+    PixelCoords p = QueueDequeue(q);
+    int x = p.u;
+    int y = p.v;
+
+    if (!ImageIsValidPixel(img, x, y)) continue;
+
+    uint16* row = img->image[y];
+    uint16* pix = &row[x];
+    PIXMEM += 1;
+
+    if (*pix != oldLabel) continue;
+
+    *pix = label;
+    PIXMEM += 1;
+    count++;
+
+    QueueEnqueue(q, PixelCoordsCreate(x + 1, y));
+    QueueEnqueue(q, PixelCoordsCreate(x - 1, y));
+    QueueEnqueue(q, PixelCoordsCreate(x, y + 1));
+    QueueEnqueue(q, PixelCoordsCreate(x, y - 1));
+  }
+
+  QueueDestroy(&q);
+  return count;
 }
+
 
 /// Image Segmentation
 
@@ -771,23 +841,29 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
   int h = ImageHeight(img);
   int w = ImageWidth(img);
   int regions = 0;
-  rgb_t newColor;
-  int myPixel = 0;
+  //rgb_t newColor; alterei aqui depois verificar--- nunca é inicializada. Estás a passar newColor diretamente como label ao fillFunct, mas label é um índice, não um RGB.
+  //keegan alterei aqui
+  rgb_t color = 0x000000;      // cor "anterior" para GenerateNextColor
+  //int myPixel = 0;
 
   for(int y = 0; y < h; y++){
     for (int x = 0; x < w; x++){
-      myPixel = img->image[y][x];    
+      //myPixel = img->image[y][x];
+      uint16 myPixel = img->image[y][x];
+      PIXMEM += 1;    
       
+      // começamos a nova regiao em pixel branco (myPixel == 0)
       if(myPixel == 0){
         regions ++;
-        newColor = GenerateNextColor(newColor);
 
+        //newColor = GenerateNextColor(newColor);
+        color = GenerateNextColor(color);
+        uint16 newColor = LUTAllocColor(img, color); //obtem o indice da nova cor na LUT
+
+        // preencher a regiao com a nova cor
         fillFunct(img, x, y, newColor); //good does it work? just test it. also its needed for 3 ather function
       }
-      
-    
     }
-     
   }
   
   // TO BE COMPLETED
