@@ -865,9 +865,5 @@ int ImageSegmentation(Image img, FillingFunction fillFunct) {
       }
     }
   }
-  
-  // TO BE COMPLETED
-  // ...//use this function to make the algorithm// we have to see
-  
   return regions;
 }

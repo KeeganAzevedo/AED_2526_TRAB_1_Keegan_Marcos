@@ -67,6 +67,29 @@ int main(int argc, char* argv[]) {//<-------------------------------------------
   Image image_3 = ImageCreatePalete(4 * 32, 4 * 32, 4);
   ImageSavePPM(image_3, "palete.ppm");
 
+  // ---- AQUI: adicionei os testes das 3 funcoes de segmentacao ----
+  printf("9) ImageSegmentation + Recursive Fill\n");
+  Image seg_rec = ImageCopy(image_1);
+  int regions_rec = ImageSegmentation(seg_rec, ImageRegionFillingRecursive);
+  printf("   Regioes (rec): %d\n", regions_rec);
+  ImageSavePPM(seg_rec, "feep_seg_rec.ppm");
+  ImageDestroy(&seg_rec);
+
+  printf("10) ImageSegmentation + STACK Fill\n");
+  Image seg_stack = ImageCopy(image_1);
+  int regions_stack = ImageSegmentation(seg_stack, ImageRegionFillingWithSTACK);
+  printf("   Regioes (stack): %d\n", regions_stack);
+  ImageSavePPM(seg_stack, "feep_seg_stack.ppm");
+  ImageDestroy(&seg_stack);
+
+  printf("11) ImageSegmentation + QUEUE Fill\n");
+  Image seg_queue = ImageCopy(image_1);
+  int regions_queue = ImageSegmentation(seg_queue, ImageRegionFillingWithQUEUE);
+  printf("   Regioes (queue): %d\n", regions_queue);
+  ImageSavePPM(seg_queue, "feep_seg_queue.ppm");
+  ImageDestroy(&seg_queue);
+  // ------------------------------------------------------
+
   ImageDestroy(&white_image);
   ImageDestroy(&black_image);
   if (copy_image != NULL) {
@@ -80,3 +103,4 @@ int main(int argc, char* argv[]) {//<-------------------------------------------
 
   return 0;
 }
+
