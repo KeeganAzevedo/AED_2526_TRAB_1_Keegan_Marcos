@@ -703,28 +703,30 @@ int ImageIsValidPixel(const Image img, int u, int v) {
 /// Region growing using the recursive flood-filling algorithm.
 int ImageRegionFillingRecursive(Image img, int u, int v, uint16 label) {
     assert(img != NULL);
-    assert(ImageIsValidPixel(img, u, v));
     assert(label < FIXED_LUT_SIZE);
 
+    // guardar bg do seed apenas na 1.ª entrada
     static uint16 bg;
     static int depth = 0;
 
     if (depth == 0) {
-        bg = img->image[v][u];   // [linha][coluna]
-        PIXMEM += 1;             // leitura seed
-        if (bg == label) return 0;
+        assert(ImageIsValidPixel(img, u, v));   // só o seed é assert
+        bg = img->image[v][u];                  // [linha][coluna]
+        PIXMEM += 1;                            // leitura seed
+        if (bg == label) return 0;              // nada a fazer
     }
+
+    // nas chamadas recursivas, vizinhos podem ser inválidos: testa e sai
+    if (!ImageIsValidPixel(img, u, v)) return 0;
 
     depth++;
 
-    if (!ImageIsValidPixel(img, u, v)) { depth--; return 0; }
-
     uint16 cur = img->image[v][u];
-    PIXMEM += 1;                 // leitura
+    PIXMEM += 1;                               // leitura
     if (cur != bg || cur == label) { depth--; return 0; }
 
-    img->image[v][u] = label;
-    PIXMEM += 1;                 // escrita
+    img->image[v][u] = label;                  // pinta
+    PIXMEM += 1;                               // escrita
     int count = 1;
 
     count += ImageRegionFillingRecursive(img, u+1, v,   label);
