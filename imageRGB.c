@@ -702,125 +702,133 @@ int ImageIsValidPixel(const Image img, int u, int v) {
 
 /// Region growing using the recursive flood-filling algorithm.
 int ImageRegionFillingRecursive(Image img, int u, int v, uint16 label) {
-  assert(img != NULL);
-  assert(ImageIsValidPixel(img, u, v));
-  assert(label < FIXED_LUT_SIZE);
+    assert(img != NULL);
+    assert(ImageIsValidPixel(img, u, v));
+    assert(label < FIXED_LUT_SIZE);
 
-  uint16 myPixel = img ->image[u][v];
-  if(myPixel != label){
-     return 0;
-  }
+    static uint16 bg;
+    static int depth = 0;
 
-  //update
-  myPixel = label;
-  //check right
-  ImageRegionFillingRecursive(img, u + 1, v,label);//img,x +1,y,newColor
-  //check down
-  ImageRegionFillingRecursive(img, u, v + 1,label);//img,x,y +1,newColor
-  //check left
-  ImageRegionFillingRecursive(img, u - 1, v,label);//img,x,y -1,newColor
-  //check up
-  ImageRegionFillingRecursive(img, u, v -1,label);//img,x ,y -1,newColor
-  // TO BE COMPLETED
-  // ...
+    if (depth == 0) {
+        bg = img->image[v][u];   // [linha][coluna]
+        PIXMEM += 1;             // leitura seed
+        if (bg == label) return 0;
+    }
 
-  return 0;
+    depth++;
+
+    if (!ImageIsValidPixel(img, u, v)) { depth--; return 0; }
+
+    uint16 cur = img->image[v][u];
+    PIXMEM += 1;                 // leitura
+    if (cur != bg || cur == label) { depth--; return 0; }
+
+    img->image[v][u] = label;
+    PIXMEM += 1;                 // escrita
+    int count = 1;
+
+    count += ImageRegionFillingRecursive(img, u+1, v,   label);
+    count += ImageRegionFillingRecursive(img, u-1, v,   label);
+    count += ImageRegionFillingRecursive(img, u,   v+1, label);
+    count += ImageRegionFillingRecursive(img, u,   v-1, label);
+
+    depth--;
+    return count;
 }
+
+
 
 /// Region growing using a STACK of pixel coordinates to
 /// implement the flood-filling algorithm.
 int ImageRegionFillingWithSTACK(Image img, int u, int v, uint16 label) {
-  assert(img != NULL);
-  assert(ImageIsValidPixel(img, u, v));
-  assert(label < FIXED_LUT_SIZE);
+    assert(img != NULL);
+    assert(ImageIsValidPixel(img, u, v));
+    assert(label < FIXED_LUT_SIZE);
 
-  uint16 oldLabel = img->image[v][u];
-  PIXMEM += 1;
+    uint16 bg = img->image[v][u];
+    PIXMEM += 1;                      // leitura do seed
+    if (bg == label) return 0;        // nada a fazer
 
-  if (oldLabel == label) {
-    return 0;
-  }
+    int count = 0;
 
-  int count = 0;
+    Stack* stack = StackCreate(ImageWidth(img) * ImageHeight(img));
+    StackPush(stack, PixelCoordsCreate(u, v));
 
-  Stack* stack = StackCreate(ImageWidth(img) * ImageHeight(img));
-  PixelCoords seed = PixelCoordsCreate(u, v);
-  StackPush(stack, seed);
+    while (!StackIsEmpty(stack)) {
+        PixelCoords p = StackPop(stack);
+        int x = p.u;    // se o ADT tiver getters, usa PixelCoordsGetU/V(p)
+        int y = p.v;
 
-  while (!StackIsEmpty(stack)) {
-    PixelCoords p = StackPop(stack);
-    int x = p.u;
-    int y = p.v;
+        if (!ImageIsValidPixel(img, x, y)) continue;
 
-    if (!ImageIsValidPixel(img, x, y)) continue;
+        uint16* row = img->image[y];
+        uint16* pix = &row[x];
+        PIXMEM += 1;                  // leitura
 
-    uint16* row = img->image[y];
-    uint16* pix = &row[x];
-    PIXMEM += 1;    // leitura
+        if (*pix != bg || *pix == label) continue;
 
-    if (*pix != oldLabel) continue;
+        *pix = label;                 // pinta
+        PIXMEM += 1;                  // escrita
+        count++;
 
-    *pix = label;
-    PIXMEM += 1;    // escrita
-    count++;
+        // empilha 4-vizinhos 
+        StackPush(stack, PixelCoordsCreate(x + 1, y));
+        StackPush(stack, PixelCoordsCreate(x - 1, y));
+        StackPush(stack, PixelCoordsCreate(x, y + 1));
+        StackPush(stack, PixelCoordsCreate(x, y - 1));
+    }
 
-    StackPush(stack, PixelCoordsCreate(x + 1, y));
-    StackPush(stack, PixelCoordsCreate(x - 1, y));
-    StackPush(stack, PixelCoordsCreate(x, y + 1));
-    StackPush(stack, PixelCoordsCreate(x, y - 1));
-  }
-
-  StackDestroy(&stack);
-  return count;
+    StackDestroy(&stack);
+    return count;
 }
+
 
 
 /// Region growing using a QUEUE of pixel coordinates to
 /// implement the flood-filling algorithm.
 int ImageRegionFillingWithQUEUE(Image img, int u, int v, uint16 label) {
-  assert(img != NULL);
-  assert(ImageIsValidPixel(img, u, v));
-  assert(label < FIXED_LUT_SIZE);
+    assert(img != NULL);
+    assert(ImageIsValidPixel(img, u, v));
+    assert(label < FIXED_LUT_SIZE);
 
-  uint16 oldLabel = img->image[v][u];
-  PIXMEM += 1;
+    uint16 bg = img->image[v][u];
+    PIXMEM += 1;                         // leitura seed
+    if (bg == label) return 0;
 
-  if (oldLabel == label) {
-    return 0;
-  }
+    int count = 0;
+    const uint32 cap = ImageWidth(img) * ImageHeight(img);
+    Queue* q = QueueCreate(cap);
 
-  int count = 0;
+    QueueEnqueue(q, PixelCoordsCreate(u, v));
 
-  Queue* q = QueueCreate(ImageWidth(img) * ImageHeight(img));
-  PixelCoords seed = PixelCoordsCreate(u, v);
-  QueueEnqueue(q, seed);
+    while (!QueueIsEmpty(q)) {
+        PixelCoords p = QueueDequeue(q);
+        int x = p.u;                     // ou PixelCoordsGetU/V(p)
+        int y = p.v;
 
-  while (!QueueIsEmpty(q)) {
-    PixelCoords p = QueueDequeue(q);
-    int x = p.u;
-    int y = p.v;
+        if (!ImageIsValidPixel(img, x, y)) continue;
 
-    if (!ImageIsValidPixel(img, x, y)) continue;
+        uint16* row = img->image[y];
+        uint16* pix = &row[x];
+        PIXMEM += 1;                     // leitura
 
-    uint16* row = img->image[y];
-    uint16* pix = &row[x];
-    PIXMEM += 1;
+        if (*pix != bg || *pix == label) continue;
 
-    if (*pix != oldLabel) continue;
+        *pix = label;                    // pinta
+        PIXMEM += 1;                     // escrita
+        count++;
 
-    *pix = label;
-    PIXMEM += 1;
-    count++;
+        // enfileira 4-vizinhos 
+        QueueEnqueue(q, PixelCoordsCreate(x + 1, y));
+        QueueEnqueue(q, PixelCoordsCreate(x - 1, y));
+        QueueEnqueue(q, PixelCoordsCreate(x, y + 1));
+        QueueEnqueue(q, PixelCoordsCreate(x, y - 1));
+    }
 
-    QueueEnqueue(q, PixelCoordsCreate(x + 1, y));
-    QueueEnqueue(q, PixelCoordsCreate(x - 1, y));
-    QueueEnqueue(q, PixelCoordsCreate(x, y + 1));
-    QueueEnqueue(q, PixelCoordsCreate(x, y - 1));
-  }
-
-  QueueDestroy(&q);
-  return count;
+    QueueDestroy(&q);
+    return count;
 }
+
 
 
 /// Image Segmentation
